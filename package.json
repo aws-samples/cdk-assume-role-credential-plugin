@@ -1,0 +1,27 @@
+{
+  "name": "cdk-assume-role-credential-plugin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "dependencies": {
+    "aws-cdk": "^1.44.0",
+    "@types/yargs": "^15.0.5",
+    "aws-sdk": "^2.692.0",
+    "yargs": "^15.3.1"
+  },
+  "peerDependencies": {
+    "aws-cdk": "^1.44.0"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.12",
+    "typescript": "^3.9.5"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prepare": "tsc"
+  },
+  "author": "Cory Hall",
+  "license": "MIT-0"
+}
