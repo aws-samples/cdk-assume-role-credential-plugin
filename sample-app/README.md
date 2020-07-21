@@ -40,12 +40,17 @@ const prod = { account: 'REPLACE_WITH_PROD_ACCOUNT_ID', region: 'us-east-2' }
 const trustedAccount = 'REPLACE_WITH_SHARED_SERVICES_ACCOUNT_ID';
 ```
 
-2. Build the CDK app.
+2. Install dependencies:
+```bash
+$ npm install
+```
+
+3. Build the CDK app.
 ```bash
 $ npm run build
 ```
 
-3. Using CLI credentials for the Dev AWS Account, run cdk deploy to create the resources
+4. Using CLI credentials for the Dev AWS Account, run cdk deploy to create the resources
 ```bash
 $ cdk deploy dev
 ```
@@ -66,7 +71,7 @@ two SampleApp stacks, one deployed to the Dev account, and the other deployed to
 
 ```typescript
 const dev = { account: 'REPLACE_WITH_DEV_ACCOUNT_ID', region: 'us-east-2' }
-const prod = { account: 'REPLACE_WITH_PROD_ACCOUNT_ID', region: 'us-east-2' }
+const prod = { account: 'REPLACE_WITH_PROD_ACCOUNT_ID', region: 'us-east-1' }
 
 new SampleApp(app, 'devSampleApp', { env: dev });
 new SampleApp(app, 'prodSampleApp', { env: prod });
