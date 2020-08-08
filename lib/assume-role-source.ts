@@ -132,10 +132,11 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     yargs
       .option('context', { type: 'array', alias: 'c', nargs: 1, requiresArg: true })
       .option('verbose', { type: 'boolean', alias: 'v', default: false })
+      .count('verbose')
       .argv
     this.config = await new Configuration(yargs.argv).load();
 
-    logging.setVerbose(yargs.argv.verbose as boolean);
+    logging.setLogLevel(yargs.argv.verbose as number)
   }
 
   /**
