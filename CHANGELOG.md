@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.0.0...v1.1.0) (2020-08-12)
+
+
+### Features
+
+* **newstylesynthesis:** work with new bootstrap roles ([2540453](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/2540453128338a706dac53b64199f089684dca50)), closes [#1](https://github.com/aws-samples/cdk-assume-role-credential-plugin/issues/1)
+
 # 1.0.0 (2020-08-12)
 
 
