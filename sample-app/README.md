@@ -20,7 +20,7 @@ $ git clone https://github.com/aws-samples/cdk-assume-role-credential-plugin.git
 
 2. Install the plugin globally
 ```bash
-$ npm install -g git+https://github.com/aws-samples/cdk-assume-role-credential-plugin.git
+$ npm install -g cdk-assume-role-credential-plugin
 ```
 
 ## Create Required Resources

@@ -1,7 +1,15 @@
 {
   "name": "cdk-assume-role-credential-plugin",
   "version": "1.0.0",
-  "description": "",
+  "description": "A CDK credential plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws-samples/cdk-assume-role-credential-plugin"
+  },
+  "keywords": [
+    "cdk",
+    "plugin"
+  ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "dependencies": {
@@ -14,7 +22,10 @@
     "aws-cdk": "^1.56.0"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^9.0.0",
     "@types/node": "^14.0.27",
+    "semantic-release": "^17.1.1",
     "typescript": "^3.9.7"
   },
   "scripts": {
