@@ -25,20 +25,18 @@ In order to use the plugin in a CDK app you have to first perform a couple prere
 
 ### Install the plugin
 
-This is not currently published to npm, so you will need to install it directly from github instead.
-
 If you are running the CDK cli from a global install you'll need to install the
 plugin globally as well.
 
 ```bash
-$ npm install -g git+https://github.com/aws-samples/cdk-assume-role-credential-plugin.git
+$ npm install -g cdk-assume-role-credential-plugin
 ```
 
 If you are running from a locally installed version of the CDK cli (i.e. `npm run cdk` or `npx cdk`) you can
 install the plugin locally
 
 ```bash
-$ npm install git+https://github.com/aws-samples/cdk-assume-role-credential-plugin.git
+$ npm install cdk-assume-role-credential-plugin
 ```
 
 I would recommend installing the plugin both locally and globally so that the plugin can be used both on a
