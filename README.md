@@ -162,8 +162,20 @@ This means that the credentials retreived by the plugin are only used to:
 1. As a credential check (ensure we can get credentials for target account) (follow this [issue](https://github.com/aws/aws-cdk/issues/9597) for when this will no longer be needed)
 2. To perform context lookups (i.e. `ssm.StringParameter.fromLookupValue()`)
 
-The CLI no longer needs the `cdk-writeRole` for anything other than a credential check, so we just default
-to using the `cdk-readOnlyRole` for both read and write operations.
+The CLI no longer needs the `cdk-writeRole` for anything other than a credential check, so the plugin will treat the `ForWriting` mode
+a little differently.
+
+- If `@aws-cdk/core:newStyleStackSynthesis=true` & `mode=ForWriting` & we are not bootstrapping: then
+The plugin will simply return the `default` credentials (will not assume a role). This will satisfy the credential check.
+
+- If `@aws-cdk/core:newStyleStackSynthesis=true` & `mode=ForReading`: then
+The plugin will use the `readOnlyRole`. Since we don't know whether it is being used to fetch context or simply perform the
+credential check, we have to assume that it is fetching context.
+
+- If `@aws-cdk/core:newStyleStackSynthesis=true` & `mode=ForWriting` & `bootstrap=true`: then
+The plugin will use the `writeRole`. See the next [section](#new-style-bootstrap) for details on why.
+
+- Otherwise assume this is using the old style syntesis and use both roles as normal.
 
 ### New style bootstrap
 
@@ -188,10 +200,14 @@ variable `bootstrap=true`. The bootstrap context variable tells the plugin that 
 command so it should use the `writeRole` to perform write operations (i.e. create & execute changeset).
 
 ```bash
-$  cdk bootstrap --trust REPLACE_WITH_TRUSTED_ACCOUNT_ID --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess --plugin cdk-assume-role-credential-plugin --context bootstrap=true
+$ cdk bootstrap --trust REPLACE_WITH_TRUSTED_ACCOUNT_ID --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess --plugin cdk-assume-role-credential-plugin --context bootstrap=true
 ```
-
 _note I did not have to specify the environments in the bootstrap command because they are set on the stacks_
+
+If I am using CDK Pipelines and my stacks exist within a [Stage](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stage.html) the CLI can't determine the environments so you will need to specify, i.e.:
+```bash
+$ cdk bootstrap --trust REPLACE_WITH_TRUSTED_ACCOUNT_ID --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess aws://2383838383/us-east-2 aws://8373873873/us-east-2 --plugin cdk-assume-role-credential-plugin --context bootstrap=true
+```
 
 ## How does it work
 

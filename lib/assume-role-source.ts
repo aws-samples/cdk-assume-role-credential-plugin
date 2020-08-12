@@ -127,13 +127,18 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
 
     logging.debug(`${this.name} getting credentials for role ${roleArn} with mode ${mode}`);
 
-    return AWS.config.credentials = new AWS.ChainableTemporaryCredentials({
-      params: {
-        RoleArn: roleArn,
-        RoleSessionName: `${accountId}-${mode}-session`
-      },
-      masterCredentials: await this.defaultCredentials(),
-    });
+    if (style && mode === cdk.Mode.ForWriting && !bootstrap) {
+      logging.debug('using newStyleStackSynthesis with mode ForWriting, returning default credentials');
+      return this.defaultCredentials()
+    } else {
+      return AWS.config.credentials = new AWS.ChainableTemporaryCredentials({
+        params: {
+          RoleArn: roleArn,
+          RoleSessionName: `${accountId}-${mode}-session`
+        },
+        masterCredentials: await this.defaultCredentials(),
+      });
+    }
   }
 
   /**
@@ -172,7 +177,6 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
       .count('verbose')
       .argv
     this.config = await new Configuration(yargs.argv).load();
-    console.log(this.config);
 
     logging.setLogLevel(yargs.argv.verbose as number)
   }
