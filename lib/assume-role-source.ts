@@ -41,14 +41,25 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     return true;
   }
 
-  /**
-   * Whether the credential provider can provide credentials for the given account.
-   *
-   * Since we are not given the mode in this method, the most we can do here is check
-   * to see whether we can obtain credentials from at least one of the roles. Because of
-   * this, the method could return a false positive in some cases.
-   */
-  public async canProvideCredentials(accountId: string): Promise<boolean> {
+  private async canProvideNewStyleSynthesis(accountId: string): Promise<boolean> {
+    const roleName = await this.getRoleFromContext(cdk.Mode.ForReading);
+
+    if (roleName) {
+      logging.debug(`${this.name} found value for readIamRole ${roleName}. checking if we can obtain credentials`);
+      const roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+      if (!await this.tryAssumeRole(roleArn, accountId)) {
+        logging.debug(`${this.name} cannot obtain credentials for role ${roleName}`);
+        return false
+      }
+    } else {
+      return false
+    }
+
+    logging.debug(`canProvideCredentails for read role: true`);
+    return true
+  }
+
+  private async canProvideOldStyleSynthesis(accountId: string): Promise<boolean> {
     let canRead = true;
     let canWrite = true;
     const readRoleName = await this.getRoleFromContext(cdk.Mode.ForReading);
@@ -80,23 +91,54 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   }
 
   /**
+   * Whether the credential provider can provide credentials for the given account.
+   *
+   * Since we are not given the mode in this method, the most we can do here is check
+   * to see whether we can obtain credentials from at least one of the roles. Because of
+   * this, the method could return a false positive in some cases.
+   */
+  public async canProvideCredentials(accountId: string): Promise<boolean> {
+    const style = this.config.context.get('@aws-cdk/core:newStyleStackSynthesis');
+    const bootstrap = this.config.context.get('bootstrap');
+    if (!bootstrap && style) {
+      return this.canProvideNewStyleSynthesis(accountId);
+    } else {
+      return this.canProvideOldStyleSynthesis(accountId);
+    }
+  }
+
+  /**
    * Construct a credential provider for the given account and the given access mode
    *
    * Guaranteed to be called only if canProvideCredentails() returned true at some point.
    */
   public async getProvider(accountId: string, mode: cdk.Mode): Promise<AWS.Credentials> {
-    const roleName = await this.getRoleFromContext(mode);
-    const roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+    const style = this.config.context.get('@aws-cdk/core:newStyleStackSynthesis');
+    const bootstrap = this.config.context.get('bootstrap');
+    var roleName: string;
+    var roleArn: string;
+    if (!bootstrap && style) {
+      roleName = await this.getRoleFromContext(cdk.Mode.ForReading)
+      roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+    } else {
+      roleName = await this.getRoleFromContext(mode);
+      roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+    }
 
     logging.debug(`${this.name} getting credentials for role ${roleArn} with mode ${mode}`);
 
-    return AWS.config.credentials = new AWS.ChainableTemporaryCredentials({
-      params: {
-        RoleArn: roleArn,
-        RoleSessionName: `${accountId}-${mode}-session`
-      },
-      masterCredentials: await this.defaultCredentials(),
-    });
+    if (style && mode === cdk.Mode.ForWriting && !bootstrap) {
+      logging.debug('using newStyleStackSynthesis with mode ForWriting, returning default credentials');
+      return this.defaultCredentials()
+    } else {
+      return AWS.config.credentials = new AWS.ChainableTemporaryCredentials({
+        params: {
+          RoleArn: roleArn,
+          RoleSessionName: `${accountId}-${mode}-session`
+        },
+        masterCredentials: await this.defaultCredentials(),
+      });
+    }
   }
 
   /**

@@ -5,6 +5,7 @@ on:
       - main
 jobs:
   release:
+    if: github.repository == 'aws-samples/cdk-assume-role-credential-plugin'
     name: Release
     runs-on: ubuntu-18.04
     steps:

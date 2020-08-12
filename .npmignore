@@ -3,3 +3,4 @@
 sample-app
 .releaserc.json
 .github
+dist
