@@ -1,0 +1,33 @@
+{
+  "branches": ["main"],
+  "tagFormat": "v${version}",
+  "plugins": [
+    ["@semantic-release/commit-analyzer"],
+    ["@semantic-release/release-notes-generator"],
+    ["@semantic-release/changelog"],
+    [
+      "@semantic-release/npm",
+      {
+        "tarballDir": "dist"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["CHANGELOG.md"]
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": "dist/*.tgz",
+        "successComment": ":tada: This issue has been resolved in version ${nextRelease.version}",
+        "failComment": "Latest release has failed",
+        "failTitle": "The automated release is failing 🚨",
+        "labels": ["semantic-release"],
+        "assignees": ["corymhall"],
+        "releasedLabels": ["released"]
+      }
+    ]
+  ]
+}
