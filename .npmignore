@@ -1,3 +1,6 @@
 *.ts
 !*.d.ts
 sample-app
+.releaserc.json
+.github
+dist
