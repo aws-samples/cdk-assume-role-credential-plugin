@@ -206,7 +206,15 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
    * Try to assume the specified role and return the credentials or undefined
    */
   private async tryAssumeRole(roleArn: string, accountId: string): Promise<AWS.STS.Credentials | undefined> {
-    const sts = new AWS.STS({credentials: await this.defaultCredentials()});
+    
+    const region = this.config && this.config.settings && this.config.settings.get(["context"]).region;
+
+    region && AWS.config.update({ region });
+
+    const sts = new AWS.STS({
+      credentials: await this.defaultCredentials(),  ...(region && { region }),
+    });
+ 
     let response: AWS.STS.Credentials | undefined;
     try {
       const resp = await sts.assumeRole({
