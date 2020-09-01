@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.1.0...v1.1.1) (2020-09-01)
+
+
+### Bug Fixes
+
+* **credentials:** allow region to be passed through context ([282c8a9](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/282c8a92148fcecfe1eb2a204237611ff3df8437))
+
 # [1.1.0](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.0.0...v1.1.0) (2020-08-12)
 
 
