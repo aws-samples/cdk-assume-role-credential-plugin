@@ -46,7 +46,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
 
     if (roleName) {
       logging.debug(`${this.name} found value for readIamRole ${roleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
       if (!await this.tryAssumeRole(roleArn, accountId)) {
         logging.debug(`${this.name} cannot obtain credentials for role ${roleName}`);
         return false
@@ -68,7 +68,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     // if the readIamRole is provided in context see if we are able to assume it
     if (readRoleName) {
       logging.debug(`${this.name} found value for readIamRole ${readRoleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:aws:iam::${accountId}:role/${readRoleName}`;
+      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${readRoleName}`;
       if (!await this.tryAssumeRole(roleArn, accountId)) {
         logging.debug(`${this.name} cannot obtain credentials for role ${readRoleName}`);
         canRead = false;
@@ -78,7 +78,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     // if the writeIamRole is provided in context see if we are able to assume it
     if (writeRoleName) {
       logging.debug(`${this.name} found value for writeIamRole ${writeRoleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:aws:iam::${accountId}:role/${writeRoleName}`;
+      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${writeRoleName}`;
       if (!await this.tryAssumeRole(roleArn, accountId)) {
         logging.debug(`${this.name} cannot obtain credentials for role ${writeRoleName}`);
         canWrite = false;
@@ -119,10 +119,10 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     var roleArn: string;
     if (!bootstrap && style) {
       roleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading)
-      roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+      roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
     } else {
       roleName = await this.getRoleFromContext(accountId, mode);
-      roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+      roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
     }
 
     logging.debug(`${this.name} getting credentials for role ${roleArn} with mode ${mode}`);
@@ -163,6 +163,11 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     }
 
     return role ?? defaultRoleName
+  }
+
+  private getPartition(): string {
+    const region = this.config?.settings?.get(["context"]).region;
+    return region?.startsWith('cn-') ? 'aws-cn' : (region?.startsWith('us-gov-') ? 'aws-us-gov' : 'aws');
   }
 
   /**
