@@ -42,7 +42,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   }
 
   private async canProvideNewStyleSynthesis(accountId: string): Promise<boolean> {
-    const roleName = await this.getRoleFromContext(cdk.Mode.ForReading);
+    const roleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading);
 
     if (roleName) {
       logging.debug(`${this.name} found value for readIamRole ${roleName}. checking if we can obtain credentials`);
@@ -62,8 +62,8 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   private async canProvideOldStyleSynthesis(accountId: string): Promise<boolean> {
     let canRead = true;
     let canWrite = true;
-    const readRoleName = await this.getRoleFromContext(cdk.Mode.ForReading);
-    const writeRoleName = await this.getRoleFromContext(cdk.Mode.ForWriting);
+    const readRoleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading);
+    const writeRoleName = await this.getRoleFromContext(accountId, cdk.Mode.ForWriting);
 
     // if the readIamRole is provided in context see if we are able to assume it
     if (readRoleName) {
@@ -118,10 +118,10 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     var roleName: string;
     var roleArn: string;
     if (!bootstrap && style) {
-      roleName = await this.getRoleFromContext(cdk.Mode.ForReading)
+      roleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading)
       roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
     } else {
-      roleName = await this.getRoleFromContext(mode);
+      roleName = await this.getRoleFromContext(accountId, mode);
       roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
     }
 
@@ -148,7 +148,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
    * your cdk.context.json file or to pass in the context values from the
    * command line with the --context option.
    */
-  private async getRoleFromContext(mode: cdk.Mode): Promise<string> {
+  private async getRoleFromContext(accountId: string, mode: cdk.Mode): Promise<string> {
     var defaultRoleName: string;
     if (mode === cdk.Mode.ForReading) {
       this.roleNameContextKey = 'assume-role-credentials:readIamRoleName'
@@ -157,7 +157,10 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
       this.roleNameContextKey = 'assume-role-credentials:writeIamRoleName'
       defaultRoleName = 'cdk-writeRole';
     }
-    const role = this.config.context.get(this.roleNameContextKey);
+    let role = this.config.context.get(this.roleNameContextKey);
+    if (typeof role === "string") {
+      role = role.replace("{ACCOUNT_ID}", accountId)
+    }
 
     return role ?? defaultRoleName
   }
