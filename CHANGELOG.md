@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.1.1...v1.2.0) (2020-10-09)
+
+
+### Features
+
+* allow aws account id placeholder in the role name ([056f3d7](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/056f3d70c9f2b046d44ba29dcc1e17c51fe653d6))
+
 ## [1.1.1](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.1.0...v1.1.1) (2020-09-01)
 
 
