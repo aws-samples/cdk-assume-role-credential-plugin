@@ -69,7 +69,7 @@ it looks for IAM roles with the names:
 - `cdk-readOnlyRole` (for read only operations)
 - `cdk-writeRole` (for write operations)
 
-If you would like to privide your own custom values you can do so through setting context values.
+If you would like to provide your own custom values you can do so through setting context values.
 
 The plugin will look for two context keys, which can either be set in the `cdk.context.json`
 file or via the `--context` option on the cli.
@@ -91,9 +91,26 @@ activities.
 $ cdk synth --context assume-role-credentials:writeIamRoleName=writeRole --context assume-role-credentials:readIamRoleName=readRole
 ```
 
+In addition, the role names can support a placeholder value for the target AWS account ID. This
+is especially handy with the new CDK Bootstrap style because the new bootstrap already creates roles
+that can be used with this plugin. Below is an example of using the CDK Bootstrap's `deploy-role`.
+
+`example cdk.context.json` 
+```json
+{
+  "context": {
+    "assume-role-credentials:readIamRoleName": "cdk-hnb659fds-deploy-role-{ACCOUNT_ID}-us-east-1"
+  }
+}
+```
+
+So the `{ACCOUNT_ID}` placeholder will be replaced with whatever AWS account ID you are attempted to
+deploy into. Caution: the AWS region cannot be replaced, so all of your AWS accounts need to have a
+common bootstrapped region.
+
 ## Using the plugin
 
-Once the [prerequisites](#prerequisites) are completed the CDK CLI will automaticlly attempt to use the credential plugin
+Once the [prerequisites](#prerequisites) are completed the CDK CLI will automatically attempt to use the credential plugin
 if the default credentials do not work for the stack's target AWS account.
 
 For example, suppose I had a CDK application that deployed 2 stacks, each to a different AWS account.
