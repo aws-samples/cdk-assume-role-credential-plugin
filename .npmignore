@@ -1,6 +1,7 @@
 *.ts
 !*.d.ts
 sample-app
+cdk-sample-pipelines-app
 .releaserc.json
 .github
 dist

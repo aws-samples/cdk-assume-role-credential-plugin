@@ -3,6 +3,7 @@
 This is a CDK credential plugin that assumes a specified role
 in the Stack account.
 
+This plugin allows [CDK Pipelines](https://docs.aws.amazon.com/cdk/api/latest/docs/pipelines-readme.html) to perform context lookups.
 
 ## When would I use this plugin
 
@@ -225,6 +226,40 @@ If I am using CDK Pipelines and my stacks exist within a [Stage](https://docs.aw
 ```bash
 $ cdk bootstrap --trust REPLACE_WITH_TRUSTED_ACCOUNT_ID --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess aws://2383838383/us-east-2 aws://8373873873/us-east-2 --plugin cdk-assume-role-credential-plugin --context bootstrap=true
 ```
+
+### CDK Pipelines
+
+This plugin can also be used to enable context lookups for CDK Pipelines.
+
+When using CDK Pipelines you only need to create the `readOnlyRole` in each
+target account. See the [section](#new-style-synthesis) on newStyleStackSynthesis for
+more details.
+
+You will also need to update the `synthAction` of your [CdkPipeline](https://docs.aws.amazon.com/cdk/api/latest/docs/pipelines-readme.html) construct
+to add an IAM policy allowing the IAM role attached to the CodeBuild project
+the ability to AssumeRole into the `cdk-readOnlyRole`.
+
+```typescript
+new pipelines.CdkPipeline(this, 'Pipeline', {
+  ...
+  synthAction: pipelines.SimpleSynthAction.standardNpmSynth({
+    ...
+    rolePolicyStatements: [
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "sts:AssumeRole",
+        ],
+        resources: [
+          "arn:aws:iam::*:role/cdk-readOnlyRole"
+        ]
+      })
+    ]
+  })
+});
+```
+
+For a complete example checkout the [sample application](./cdk-sample-pipelines-app).
 
 ## How does it work
 

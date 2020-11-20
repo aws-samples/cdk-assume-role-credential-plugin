@@ -19,5 +19,5 @@
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"]
   },
-  "exclude": ["cdk.out", "sample-app", "cdk-sample-pipelines-app"]
+  "exclude": ["cdk.out"]
 }
