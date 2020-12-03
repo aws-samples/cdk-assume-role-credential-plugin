@@ -26,10 +26,11 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   name: string;
   roleNameContextKey: string;
   config: Configuration;
+  loadContextPromise: Promise<void>;
 
   constructor() {
     this.name = "AssumeRoleCredentialPlugin";
-    this.loadContext();
+    this.loadContextPromise = this.loadContext();
   }
 
   /**
@@ -38,6 +39,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
    * Guaranteed to be called before any of the other functions are called.
    */
   public async isAvailable(): Promise<boolean> {
+    await this.loadContextPromise;
     return true;
   }
 
