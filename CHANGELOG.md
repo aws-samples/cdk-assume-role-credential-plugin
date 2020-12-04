@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.0...v1.2.1) (2020-12-04)
+
+
+### Bug Fixes
+
+* race condition when loading context ([c586030](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/c586030fcb5e93b88d315073ea43b90ddc0785c5))
+
 # [1.2.0](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.1.1...v1.2.0) (2020-10-09)
 
 
