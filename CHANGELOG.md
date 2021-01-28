@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.1...v1.2.2) (2021-01-28)
+
+
+### Bug Fixes
+
+* **config:** fix config loading ([d691b2c](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/d691b2c16f0b1d62d269e486c4b8a238aef330c1)), closes [#25](https://github.com/aws-samples/cdk-assume-role-credential-plugin/issues/25)
+
 ## [1.2.1](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.0...v1.2.1) (2020-12-04)
 
 
