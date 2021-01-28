@@ -17,7 +17,7 @@
  */
 
 import * as cdk from 'aws-cdk';
-import { Configuration } from 'aws-cdk/lib/settings';
+import { Command, Configuration } from 'aws-cdk/lib/settings';
 import * as logging from 'aws-cdk/lib/logging';
 import AWS = require('aws-sdk');
 import yargs = require('yargs');
@@ -181,7 +181,10 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
       .option('verbose', { type: 'boolean', alias: 'v', default: false })
       .count('verbose')
       .argv
-    this.config = await new Configuration(yargs.argv).load();
+      this.config = await new Configuration({ commandLineArguments: {
+        ...yargs.argv,
+        _: yargs.argv._ as [Command, ...string[]],
+      } }).load();
 
     logging.setLogLevel(yargs.argv.verbose as number)
   }
