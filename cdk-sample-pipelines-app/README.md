@@ -83,12 +83,12 @@ The role is also configured to trust the Shared Services account.
 
 1. Using CLI credentials for the Dev AWS Account, run cdk deploy to create the resources
 ```bash
-$ cdk deploy –-app "npx ts-node bin/required-resources.ts" dev
+$ cdk deploy --app "npx ts-node bin/required-resources.ts" dev
 ```
 
 2. Using CLI credentials for the Prod AWS Account, run cdk deploy to create the resources
 ```bash
-$ cdk deploy –-app "npx ts-node bin/required-resources.ts" prod
+$ cdk deploy --app "npx ts-node bin/required-resources.ts" prod
 ```
 
 Now you should have the required roles created in both the Dev and Prod AWS Accounts.
