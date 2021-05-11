@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.2...v1.2.3) (2021-05-11)
+
+
+### Bug Fixes
+
+* **deps:** dependency update based on security advisory ([a046169](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/a046169b62df9b86215652b86249644dabb70074))
+
 ## [1.2.2](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.1...v1.2.2) (2021-01-28)
 
 
