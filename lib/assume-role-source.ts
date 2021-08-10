@@ -48,7 +48,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
 
     if (roleName) {
       logging.debug(`${this.name} found value for readIamRole ${roleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
       if (!await this.tryAssumeRole(roleArn, accountId)) {
         logging.debug(`${this.name} cannot obtain credentials for role ${roleName}`);
         return false
@@ -70,7 +70,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     // if the readIamRole is provided in context see if we are able to assume it
     if (readRoleName) {
       logging.debug(`${this.name} found value for readIamRole ${readRoleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:aws:iam::${accountId}:role/${readRoleName}`;
+      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${readRoleName}`;
       if (!await this.tryAssumeRole(roleArn, accountId)) {
         logging.debug(`${this.name} cannot obtain credentials for role ${readRoleName}`);
         canRead = false;
@@ -80,7 +80,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     // if the writeIamRole is provided in context see if we are able to assume it
     if (writeRoleName) {
       logging.debug(`${this.name} found value for writeIamRole ${writeRoleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:aws:iam::${accountId}:role/${writeRoleName}`;
+      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${writeRoleName}`;
       if (!await this.tryAssumeRole(roleArn, accountId)) {
         logging.debug(`${this.name} cannot obtain credentials for role ${writeRoleName}`);
         canWrite = false;
@@ -121,10 +121,10 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     var roleArn: string;
     if (!bootstrap && style) {
       roleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading)
-      roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+      roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
     } else {
       roleName = await this.getRoleFromContext(accountId, mode);
-      roleArn = `arn:aws:iam::${accountId}:role/${roleName}`;
+      roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
     }
 
     logging.debug(`${this.name} getting credentials for role ${roleArn} with mode ${mode}`);
@@ -168,6 +168,28 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   }
 
   /**
+   * Get AWS region either from CDK context or from command line arguments.
+   */
+  private getRegion(): string {
+    return this.config && this.config.settings && this.config.settings.get(["context"]).region || yargs.argv?.region;
+  }
+
+  /**
+   * Get AWS partition based on region prefix.
+   *
+   * Supports three partitions:
+   *  - AWS Global (`aws`),
+   *  - AWS China (`aws-cn`),
+   *  - AWS US Gov (`aws-us-gov`)
+   */
+  private getPartition(): string {
+    const region = this.getRegion();
+    const partition = region?.startsWith('cn-') ? 'aws-cn' : (region?.startsWith('us-gov-') ? 'aws-us-gov' : 'aws');
+    logging.debug(`Using AWS partition: ${partition} for region ${region}`);
+    return partition;
+  }
+
+  /**
    * Load context from cdk.context.json as well as the --context command line
    * option. Since we don't have access to the command line arguments from within the
    * cli, we get it from yargs.argv.
@@ -181,10 +203,12 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
       .option('verbose', { type: 'boolean', alias: 'v', default: false })
       .count('verbose')
       .argv
-      this.config = await new Configuration({ commandLineArguments: {
+    this.config = await new Configuration({
+      commandLineArguments: {
         ...yargs.argv,
         _: yargs.argv._ as [Command, ...string[]],
-      } }).load();
+      }
+    }).load();
 
     logging.setLogLevel(yargs.argv.verbose as number)
   }
@@ -214,15 +238,15 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
    * Try to assume the specified role and return the credentials or undefined
    */
   private async tryAssumeRole(roleArn: string, accountId: string): Promise<AWS.STS.Credentials | undefined> {
-    
-    const region = this.config && this.config.settings && this.config.settings.get(["context"]).region;
+
+    const region = this.getRegion();
 
     region && AWS.config.update({ region });
 
     const sts = new AWS.STS({
-      credentials: await this.defaultCredentials(),  ...(region && { region }),
+      credentials: await this.defaultCredentials(), ...(region && { region }),
     });
- 
+
     let response: AWS.STS.Credentials | undefined;
     try {
       const resp = await sts.assumeRole({
