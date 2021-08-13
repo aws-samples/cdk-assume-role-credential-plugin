@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.3.0...v1.4.0) (2021-08-13)
+
+
+### Features
+
+* load aws_default_ environment variables ([#48](https://github.com/aws-samples/cdk-assume-role-credential-plugin/issues/48)) ([6622a13](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/6622a13c5a951ecea9f6f6e863e397098dbd262e)), closes [#42](https://github.com/aws-samples/cdk-assume-role-credential-plugin/issues/42) [#31](https://github.com/aws-samples/cdk-assume-role-credential-plugin/issues/31)
+
 # [1.3.0](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.3...v1.3.0) (2021-08-13)
 
 
