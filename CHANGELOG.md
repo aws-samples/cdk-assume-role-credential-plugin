@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.3...v1.3.0) (2021-08-13)
+
+
+### Features
+
+* add support for 'aws-cn' and 'aws-us-gov' partitions ([#44](https://github.com/aws-samples/cdk-assume-role-credential-plugin/issues/44)) ([c84e855](https://github.com/aws-samples/cdk-assume-role-credential-plugin/commit/c84e85590aeef880341861669b226194142a6664)), closes [#13](https://github.com/aws-samples/cdk-assume-role-credential-plugin/issues/13)
+
 ## [1.2.3](https://github.com/aws-samples/cdk-assume-role-credential-plugin/compare/v1.2.2...v1.2.3) (2021-05-11)
 
 
