@@ -211,6 +211,14 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     }).load();
 
     logging.setLogLevel(yargs.argv.verbose as number)
+
+    // Set environment variables so JS AWS SDK behaves as close as possible to AWS CLI.
+    if (process.env.AWS_DEFAULT_PROFILE && !process.env.AWS_PROFILE) {
+      process.env.AWS_PROFILE = process.env.AWS_DEFAULT_PROFILE;
+    }
+    if (process.env.AWS_DEFAULT_REGION && !process.env.AWS_REGION) {
+      process.env.AWS_REGION = process.env.AWS_DEFAULT_REGION;
+    }
   }
 
   /**
