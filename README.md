@@ -109,6 +109,15 @@ So the `{ACCOUNT_ID}` placeholder will be replaced with whatever AWS account ID 
 deploy into. Caution: the AWS region cannot be replaced, so all of your AWS accounts need to have a
 common bootstrapped region.
 
+The role names can also take in `ExternalID` to establish trusted relationship, if needed.
+`example cdk.context.json`
+```json
+{
+  "assume-role-credentials:writeIamRoleName": "writeRole/trusted-external-id",
+  "assume-role-credentials:readIamRoleName": "readRole/trusted-external-id"
+}
+```
+
 ## Using the plugin
 
 Once the [prerequisites](#prerequisites) are completed the CDK CLI will automatically attempt to use the credential plugin

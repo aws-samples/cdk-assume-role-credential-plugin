@@ -21,6 +21,21 @@ import { Command, Configuration } from 'aws-cdk/lib/settings';
 import * as logging from 'aws-cdk/lib/logging';
 import AWS = require('aws-sdk');
 import yargs = require('yargs');
+import {AssumeRoleRequest} from "aws-sdk/clients/sts";
+
+/**
+ * Interface defined to pass around external role parameters
+ */
+interface RoleParam {
+  /**
+   * Name of the role in the external account
+   */
+  roleName: string;
+  /**
+   * External ID used for authorization
+   */
+  externalId?: string;
+}
 
 export class AssumeRoleCredentialProviderSource implements cdk.CredentialProviderSource {
   name: string;
@@ -44,13 +59,12 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   }
 
   private async canProvideNewStyleSynthesis(accountId: string): Promise<boolean> {
-    const roleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading);
+    const role = await this.getRoleFromContext(accountId, cdk.Mode.ForReading);
 
-    if (roleName) {
-      logging.debug(`${this.name} found value for readIamRole ${roleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
-      if (!await this.tryAssumeRole(roleArn, accountId)) {
-        logging.debug(`${this.name} cannot obtain credentials for role ${roleName}`);
+    if (role) {
+      logging.debug(`${this.name} found value for readIamRole ${role.roleName}. checking if we can obtain credentials`);
+      if (!await this.tryAssumeRole(role, accountId)) {
+        logging.debug(`${this.name} cannot obtain credentials for role ${role.roleName}`);
         return false
       }
     } else {
@@ -64,25 +78,23 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   private async canProvideOldStyleSynthesis(accountId: string): Promise<boolean> {
     let canRead = true;
     let canWrite = true;
-    const readRoleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading);
-    const writeRoleName = await this.getRoleFromContext(accountId, cdk.Mode.ForWriting);
+    const readRole = await this.getRoleFromContext(accountId, cdk.Mode.ForReading);
+    const writeRole = await this.getRoleFromContext(accountId, cdk.Mode.ForWriting);
 
     // if the readIamRole is provided in context see if we are able to assume it
-    if (readRoleName) {
-      logging.debug(`${this.name} found value for readIamRole ${readRoleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${readRoleName}`;
-      if (!await this.tryAssumeRole(roleArn, accountId)) {
-        logging.debug(`${this.name} cannot obtain credentials for role ${readRoleName}`);
+    if (readRole) {
+      logging.debug(`${this.name} found value for readIamRole ${readRole.roleName}. checking if we can obtain credentials`);
+      if (!await this.tryAssumeRole(readRole, accountId)) {
+        logging.debug(`${this.name} cannot obtain credentials for role ${readRole.roleName}`);
         canRead = false;
       }
     } else { canRead = false }
 
     // if the writeIamRole is provided in context see if we are able to assume it
-    if (writeRoleName) {
-      logging.debug(`${this.name} found value for writeIamRole ${writeRoleName}. checking if we can obtain credentials`);
-      const roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${writeRoleName}`;
-      if (!await this.tryAssumeRole(roleArn, accountId)) {
-        logging.debug(`${this.name} cannot obtain credentials for role ${writeRoleName}`);
+    if (writeRole) {
+      logging.debug(`${this.name} found value for writeIamRole ${writeRole.roleName}. checking if we can obtain credentials`);
+      if (!await this.tryAssumeRole(writeRole, accountId)) {
+        logging.debug(`${this.name} cannot obtain credentials for role ${writeRole.roleName}`);
         canWrite = false;
       }
     } else { canWrite = false }
@@ -117,27 +129,22 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   public async getProvider(accountId: string, mode: cdk.Mode): Promise<AWS.Credentials> {
     const style = this.config.context.get('@aws-cdk/core:newStyleStackSynthesis');
     const bootstrap = this.config.context.get('bootstrap');
-    var roleName: string;
-    var roleArn: string;
+    let role: RoleParam;
     if (!bootstrap && style) {
-      roleName = await this.getRoleFromContext(accountId, cdk.Mode.ForReading)
-      roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
+      role = await this.getRoleFromContext(accountId, cdk.Mode.ForReading)
     } else {
-      roleName = await this.getRoleFromContext(accountId, mode);
-      roleArn = `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
+      role = await this.getRoleFromContext(accountId, mode);
     }
 
-    logging.debug(`${this.name} getting credentials for role ${roleArn} with mode ${mode}`);
+    logging.debug(`${this.name} getting credentials for role ${role.roleName} with mode ${mode}`);
 
     if (style && mode === cdk.Mode.ForWriting && !bootstrap) {
       logging.debug('using newStyleStackSynthesis with mode ForWriting, returning default credentials');
       return this.defaultCredentials()
     } else {
+      const requestParams = this.getAssumeRoleRequestParams(accountId, role, `${accountId}-${mode}-session`)
       return AWS.config.credentials = new AWS.ChainableTemporaryCredentials({
-        params: {
-          RoleArn: roleArn,
-          RoleSessionName: `${accountId}-${mode}-session`
-        },
+        params: requestParams,
         masterCredentials: await this.defaultCredentials(),
       });
     }
@@ -150,8 +157,9 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
    * your cdk.context.json file or to pass in the context values from the
    * command line with the --context option.
    */
-  private async getRoleFromContext(accountId: string, mode: cdk.Mode): Promise<string> {
-    var defaultRoleName: string;
+  private async getRoleFromContext(accountId: string, mode: cdk.Mode): Promise<RoleParam> {
+    let defaultRoleName: string;
+    let externalId: string | undefined;
     if (mode === cdk.Mode.ForReading) {
       this.roleNameContextKey = 'assume-role-credentials:readIamRoleName'
       defaultRoleName = 'cdk-readOnlyRole';
@@ -161,10 +169,11 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     }
     let role = this.config.context.get(this.roleNameContextKey);
     if (typeof role === "string") {
+      [role, externalId] = role.split('/')
       role = role.replace("{ACCOUNT_ID}", accountId)
     }
 
-    return role ?? defaultRoleName
+    return { roleName: role ?? defaultRoleName, externalId }
   }
 
   /**
@@ -245,7 +254,7 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
   /**
    * Try to assume the specified role and return the credentials or undefined
    */
-  private async tryAssumeRole(roleArn: string, accountId: string): Promise<AWS.STS.Credentials | undefined> {
+  private async tryAssumeRole(role: RoleParam, accountId: string): Promise<AWS.STS.Credentials | undefined> {
 
     const region = this.getRegion();
 
@@ -257,15 +266,29 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
 
     let response: AWS.STS.Credentials | undefined;
     try {
-      const resp = await sts.assumeRole({
-        RoleArn: roleArn,
-        RoleSessionName: `${accountId}-session`
-      }).promise();
+      const requestParams = this.getAssumeRoleRequestParams(accountId, role);
+      const resp = await sts.assumeRole(requestParams).promise();
       response = resp.Credentials;
     } catch (e) {
       logging.debug('error assuming role %s', e)
       return undefined
     }
     return response
+  }
+
+
+  private getAssumeRoleRequestParams(accountId: string, role: RoleParam, sessionName?: string) {
+    const requestParams: AssumeRoleRequest = {
+      RoleArn: this.getRoleArn(accountId, role.roleName),
+      RoleSessionName: sessionName ?? `${accountId}-session`
+    }
+    if (typeof role.externalId === "string") {
+      requestParams['ExternalId'] = role.externalId
+    }
+    return requestParams;
+  }
+
+  private getRoleArn(accountId: string, roleName: string): string {
+    return `arn:${this.getPartition()}:iam::${accountId}:role/${roleName}`;
   }
 }
