@@ -232,12 +232,12 @@ export class AssumeRoleCredentialProviderSource implements cdk.CredentialProvide
     const profile = this.config.settings.get(['profile']);
     const masterCreds = new AWS.CredentialProviderChain([
       function () { return new AWS.ECSCredentials(); },
-      function () { return new AWS.SharedIniFileCredentials({ profile: profile }); },
-      function () { return new AWS.TokenFileWebIdentityCredentials(); },
-      function () { return new AWS.ProcessCredentials({ profile: profile }); },
       function () { return new AWS.EnvironmentCredentials('AWS'); },
       function () { return new AWS.EnvironmentCredentials('AMAZON'); },
-      function () { return new AWS.EC2MetadataCredentials(); },
+      function () { return new AWS.SharedIniFileCredentials({ profile: profile }); },
+      function () { return new AWS.ProcessCredentials({ profile: profile }); },
+      function () { return new AWS.TokenFileWebIdentityCredentials(); },
+      function () { return new AWS.EC2MetadataCredentials() },
     ]);
     return masterCreds.resolvePromise();
   }
